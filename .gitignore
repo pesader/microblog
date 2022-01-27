@@ -130,3 +130,6 @@ dmypy.json
 
 # Pyright settings
 pyrightconfig.json
+
+# Direnv
+.envrc
