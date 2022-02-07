@@ -1,0 +1,8 @@
+<!-- this is a jinja subtemplate, which will be reused on multiple templates -->
+<!-- its filename is preceded by an underline to indicate it is a subtemplate -->
+<table>
+    <tr valign="top">
+        <td><img src={{ post.author.avatar(36) }}></td>
+        <td>{{ post.author.username }} says: {{ post.body }}</td>
+    </tr>
+</table>

@@ -2,6 +2,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from datetime import datetime
 from app import db, login
+from hashlib import md5
 
 
 class User(UserMixin, db.Model):
@@ -12,6 +13,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(64), index=True, unique=True)
     password_hash = db.Column(db.String(128))
+    about_me = db.Column(db.String(140))
+    last_seen = db.Column(db.DateTime, default=datetime.utcnow)
 
     # db.relationship is used for one-to-many relationships. In this case,
     # the "one" side is the User class and the "many" side is the Post class.
@@ -27,6 +30,10 @@ class User(UserMixin, db.Model):
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+
+    def avatar(self, size):
+        digest = md5(self.email.lower().encode("utf-8")).hexdigest()
+        return f"https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}"
 
 
 class Post(db.Model):
