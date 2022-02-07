@@ -133,3 +133,12 @@ pyrightconfig.json
 
 # Direnv settings
 .envrc
+
+# Logs
+logs/
+
+# Tags
+tags
+
+# Database
+app.db
