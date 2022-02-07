@@ -131,5 +131,5 @@ dmypy.json
 # Pyright settings
 pyrightconfig.json
 
-# Direnv
+# Direnv settings
 .envrc
