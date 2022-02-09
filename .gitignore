@@ -142,3 +142,6 @@ tags
 
 # Database
 app.db
+
+# Temporary files
+tmp*
