@@ -5,6 +5,15 @@ from app import db, login
 from hashlib import md5
 
 
+# the definition below is for an auxiliary table (a self referential one, to be
+# more specific) so we won't make an entire Model class for it
+followers = db.Table(
+    "followers",
+    db.Column("follower_id", db.Integer, db.ForeignKey("user.id")),
+    db.Column("followed_id", db.Integer, db.ForeignKey("user.id")),
+)
+
+
 class User(UserMixin, db.Model):
     # the UserMixin class provided by flask_login has generic implementations
     # for the methods and fields necessary to add login functionality to the
@@ -22,6 +31,17 @@ class User(UserMixin, db.Model):
     # points back to the User whose id is used as ForeignKey.
     posts = db.relationship("Post", backref="author", lazy="dynamic")
 
+    # representing followers in the database is non-trivial, so we'll comment
+    # line by line of its definition
+    followed = db.relationship(
+        "User",  # the "right side" of the relationship, the "left side" is the parent class
+        secondary=followers,  # the association table to be used
+        primaryjoin=(followers.c.follower_id == id),  # condition to link left side with assoc table
+        secondaryjoin=(followers.c.followed_id == id),  # condition to link right side with assoc table
+        backref=db.backref("followers", lazy="dynamic"),  # how this relation is accessed from the right
+        lazy="dynamic",
+    )
+
     def __repr__(self) -> str:
         return f"<User {self.username}>"
 
@@ -34,6 +54,24 @@ class User(UserMixin, db.Model):
     def avatar(self, size):
         digest = md5(self.email.lower().encode("utf-8")).hexdigest()
         return f"https://www.gravatar.com/avatar/{digest}?d=identicon&s={size}"
+
+    def follow(self, user):
+        if not self.is_following(user):
+            self.followed.append(user)
+
+    def unfollow(self, user):
+        if self.is_following(user):
+            self.followed.remove(user)
+
+    def is_following(self, user):
+        return self.followed.filter(followers.c.followed_id == user.id).count() > 0
+
+    def followed_posts(self):
+        followed = Post.query.join(followers, followers.c.followed_id == Post.user_id).filter(
+            followers.c.follower_id == self.id
+        )
+        own = Post.query.filter(user_id=self.id)
+        return followed.union(own).order_by(Post.timestamp.desc())
 
 
 class Post(db.Model):
